@@ -22,12 +22,15 @@ namespace SpaceParkConsole
 
         public static int Show(string prompt, string[] options)
         {
+            Console.Clear();
             if (options == null || options.Length == 0)
             {
                 throw new ArgumentException("Cannot show a menu for an empty array of options.");
             }
-
-            Console.WriteLine(prompt);
+            if (!string.IsNullOrWhiteSpace(prompt))
+            {
+                Console.WriteLine(prompt);
+            }
 
             int selected = 0;
 
@@ -74,8 +77,47 @@ namespace SpaceParkConsole
             return selected;
         }
 
+        public void MainMenu()
+        {
+            Console.Clear();
+            // TODO: changed quit to logout if logged in.
+            // TODO: if you are in the spaceship options -> add a Quit option
+            string[] options = { "Park", "Show History", "Log out", "Quit" };
+            bool isCheckedIn = DBQuery.IsCheckedIn(ActivePerson);
+            if (isCheckedIn)
+            {
+                options = new string[] { "Pay and leave", "Show History", "Log out", "Quit" };
+            }
+
+            int selection = Show($"Welcome to SpacePark {ActivePerson}, what would you like to do?", options);
+
+            if (selection == options.Length - 1)
+            {
+                Environment.Exit(0);
+            }
+            else if (isCheckedIn && selection == 0)
+            {
+                ShowPayAndLeave();
+                LogOut();
+            }
+            else if (!isCheckedIn && selection == 0)
+            {
+                ShowParkingMenu();
+            }
+            else if (selection == 1)
+            {
+                ShowPersonalHistory(ActivePerson);
+            }
+            else if (selection == options.Length - 2)
+            {
+                LogOut();
+            }
+            MainMenu();
+        }
+
         public bool ShowNamePrompt()
         {
+            Console.Clear();
             Console.WriteLine("Please enter your name: ");
             string nameAnswer = Console.ReadLine();
             bool isSwChar = swApi.ValidateSwName(nameAnswer);
@@ -87,56 +129,30 @@ namespace SpaceParkConsole
 
             string[] options = { "Re-enter name ", "Quit" };
             int selection = Show("Sorry, looks like you entered an invalid name... what would you like to do?", options);
-            if (selection == 0)
-            {
-                ShowNamePrompt();
-            }
-
-            return false;
-        }
-
-        public void MainMenu()
-        {
-            // TODO: changed quit to logout if logged in.
-            // TODO: if you are in the spaceship options -> add a Quit option
-            string[] options = { "Park", "Quit" };
-            bool isCheckedIn = DBQuery.IsCheckedIn(ActivePerson);
-            if (isCheckedIn)
-            {
-                options = new string[] { "Pay and leave", "Quit" };
-            }
-
-            int selection = Show("Menu:", options);
 
             if (selection == options.Length - 1)
             {
                 Environment.Exit(0);
             }
-            else if (isCheckedIn && selection == 0)
+            else if (selection == 0)
             {
-                // sends you to pay, then to print receipt etc..
-                ShowPayAndLeave();
-                Console.Clear();
-                ShowNamePrompt();
+                return ShowNamePrompt();
             }
-            else if (!isCheckedIn && selection == 0)
-            {
-                ShowParkingMenu();
-            }
-            MainMenu();
+
+            return false;
         }
 
         private void ShowParkingMenu()
         {
-            // TODO: ==> if parking spots are full => check if bigger spot is open and offer it (yes/no), if not then quit
-
-            List<SwStarship> starships = swApi.GetPersonStarships(ActivePerson);
-
-            if (starships.Count == 0)
+            Console.Clear();
+            List<SwStarship> starships = swApi.GetAllResources<SwStarship>(SwApiResource.starships).Result;
+            List<SwStarship> personalStarships = swApi.GetPersonStarships(ActivePerson);
+            
+            foreach (var ship in personalStarships)
             {
-                Console.WriteLine("Hitchhikers get expelled into space, goodbye!");
-                Console.ReadKey();
-                Environment.Exit(0);
+                int shipIndex = starships.FindIndex(s => s.Name == ship.Name);
+                starships.RemoveAt(shipIndex);
+                starships.Insert(0, ship);
             }
 
             // Getting the Names for the menu
@@ -168,6 +184,7 @@ namespace SpaceParkConsole
 
         private void ShowPayAndLeave()
         {
+            Console.Clear();
             Occupancy occupancy = DBQuery.GetOpenOccupancyByName(ActivePerson);
             int parkingSpotID = occupancy.ParkingSpotID;
             int parkingSizeID = DBQuery.GetParkingSizeIDBySpot(parkingSpotID);
@@ -186,10 +203,62 @@ namespace SpaceParkConsole
 
         private void ShowInvoiceAndLogout(decimal totalPrice, decimal billingHours)
         {
+            Console.Clear();
             Console.WriteLine($"Thank you for choosing us {ActivePerson}. You paid {totalPrice} for {billingHours} hours.");
-            ActivePerson = "";
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
+            LogOut();
+        }
+
+        private void ShowPersonalHistory(string name)
+        {
+            Console.Clear();
+            List<OccupancyHistory> history = DBQuery.GetPersonalHistory(name);
+
+            Console.WriteLine("Spaceship                           Date          Duration (in hours)");
+            Console.WriteLine("---------------------------------------------------------------------");
+
+            foreach(var data in history)
+            {
+                string spaceshipName = ResizeTextToLength(data.SpaceshipName, 32);
+
+                string date = data.ArrivalTime.ToString("yyyy-MM-dd");
+                date = ResizeTextToLength(date, 10);
+
+                double duration = (data.DepartureTime - data.ArrivalTime).TotalHours;
+                duration = Math.Round(duration, 1, MidpointRounding.ToPositiveInfinity);
+                string durationText = duration.ToString();
+                durationText = ResizeTextToLength(durationText, 4);
+
+                Console.WriteLine($"{spaceshipName}    {date}    {durationText}");
+            }
+            Console.WriteLine("\nPress any key to continue...");
+            Console.ReadKey();
+        }
+
+        private static string ResizeTextToLength(string text, int length)
+        {
+            string result = "";
+            if (text.Length == length)
+            {
+                result = text;
+            }
+            else if (text.Length > length)
+            {
+                result = text.Substring(0, length - 3) + "...";
+            }
+            else if (text.Length < length)
+            {
+                result = text.PadRight(length);
+            }
+            return result;
+        }
+
+        private void LogOut()
+        {
+            ActivePerson = "";
+            Console.Clear();
+            ShowNamePrompt();
         }
     }
 }

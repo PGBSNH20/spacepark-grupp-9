@@ -60,8 +60,15 @@ namespace SpaceParkModel.Data
 
         public bool ValidateSwName(string name)
         {
-            var names = SearchResource<SwPeople>(SwApiResource.people, name).Result;
-            return names.Count > 0;
+            string trimmedName = name.Trim().ToLower();
+            List<SwPeople> people = SearchResource<SwPeople>(SwApiResource.people, trimmedName).Result;
+            if (people.Count != 1)
+            {
+                return false;
+            }
+            string personName = people[0].Name.ToLower();
+
+            return trimmedName.Equals(personName);
         }
 
         public List<SwStarship> GetPersonStarships(string name)

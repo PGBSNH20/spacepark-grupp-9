@@ -109,7 +109,10 @@ namespace SpaceParkModel
         {
             using (var context = new SpaceParkContext())
             {
-                return context.Persons.Where(p => p.Name.Equals(name)).First().ID;
+                var person = context.Persons.Where(p => p.Name.Equals(name)).FirstOrDefault();
+                int personID = person != null ? person.ID : 0;
+                return personID;
+                //return context.Persons.Where(p => p.Name.Equals(name)).First().ID;
             }
         }
 
@@ -143,6 +146,50 @@ namespace SpaceParkModel
             using (var context = new SpaceParkContext())
             {
                 return context.Occupancies.Where(o => !o.DepartureTime.HasValue && o.PersonID == GetPersonID(name)).Count() > 0;
+            }
+        }
+
+        public static List<OccupancyHistory> GetPersonalHistory(string name)
+        {
+            using (var context = new SpaceParkContext())
+            {
+                List<OccupancyHistory> history = context.Persons
+                    .Join(
+                        context.Occupancies,
+                        person => person.ID,
+                        occupancy => occupancy.PersonID,
+                        (person, occupancy) => new
+                        {
+                            PersonName = person.Name,
+                            SpaceshipID = occupancy.SpaceshipID,
+                            ArrivalTime = occupancy.ArrivalTime,
+                            DepartureTime = occupancy.DepartureTime
+                        }
+                    )
+                    .Join(
+                        context.Spaceships,
+                        occupancy => occupancy.SpaceshipID,
+                        spaceship => spaceship.ID,
+                        (occupancy, spaceship) => new
+                        {
+                            PersonName = occupancy.PersonName,
+                            SpaceshipName = spaceship.Name,
+                            ArrivalTime = occupancy.ArrivalTime,
+                            DepartureTime = occupancy.DepartureTime
+                        }
+                    )
+                    .Where(data => data.PersonName == name &&
+                                   data.DepartureTime.HasValue)
+                    .Select(data => new OccupancyHistory
+                    {
+                        PersonName = data.PersonName,
+                        SpaceshipName = data.SpaceshipName,
+                        ArrivalTime = data.ArrivalTime,
+                        DepartureTime = data.DepartureTime.GetValueOrDefault()
+                    })
+                    .ToList();
+
+                return history;
             }
         }
     }
