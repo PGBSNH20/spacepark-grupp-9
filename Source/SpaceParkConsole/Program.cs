@@ -22,12 +22,6 @@ namespace SpaceParkConsole
             }
             Environment.Exit(0);
 
-            // ** Todo: everyone can get a list of ships, if you own a ship, put those ontop so they can easily access them **
-            // ** Todo: check when you enter name {Luke (with a space)} fix that bug ** 
-            // ** Todo: SwApi, check the validate name, could make it more exact and check for the exact name ** 
-
-            // Todo: Add a history on the menu?
-            // so if luke skywalker is logged on then only show his history
 
             // Todo: if parking spots are full => check if bigger spot is open and offer it (yes/no), if not then quit
             // Todo: Use joins for "complex" lookups instead of finding ids for each step. See: Menu.ShowParkingMenu(). Maybe try putting that query in DBQuery, too.
