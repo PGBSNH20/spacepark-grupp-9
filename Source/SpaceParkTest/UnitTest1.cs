@@ -1,4 +1,3 @@
-using SpaceParkModel.Data;
 using SpaceParkModel.SwApi;
 using System;
 using Xunit;

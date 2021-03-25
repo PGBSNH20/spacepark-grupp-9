@@ -1,4 +1,4 @@
-﻿namespace SpaceParkModel.Data
+﻿namespace SpaceParkModel.SwApi
 {
     public enum SwApiResource
     {

@@ -1,12 +1,9 @@
-﻿using SpaceParkModel.Data;
-using SpaceParkModel.Database;
+﻿using SpaceParkModel.SwApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace SpaceParkModel
+namespace SpaceParkModel.Database
 {
     public static class DBQuery
     {
@@ -20,7 +17,7 @@ namespace SpaceParkModel
             }
         }
 
-        public static int GetAvailableParking(int sizeID)
+        public static int GetAvailableParkingSpotID(int sizeID)
         {
             using (var context = new SpaceParkContext())
             {
@@ -29,7 +26,6 @@ namespace SpaceParkModel
 
                 // we are looking for a departure which doesn't have a value and a parking spot that isnt occupied, and we take the first one.
                 // find: id that's unused by checking all entries without departure
-
                 int[] unavailableOccupancies = context.Occupancies.Where(o => !o.DepartureTime.HasValue).Select(o => o.ParkingSpotID).ToArray();
 
                 int firstAvailableSpot = parkingSpots.Where(p => !unavailableOccupancies.Contains(p)).FirstOrDefault();
@@ -38,11 +34,26 @@ namespace SpaceParkModel
             }
         }
 
+        public static int GetAvailableParkingSpotID(SwStarship ship)
+        {
+            double starshipLength = ship.Length;
+
+            using (var context = new SpaceParkContext())
+            {
+
+                ParkingSize appropriateParkingSize = context.ParkingSizes.Where(p => p.Size > starshipLength).OrderBy(p => p.Size).First();
+
+                int availableParkingSpotID = GetAvailableParkingSpotID(appropriateParkingSize.ID);
+
+                return availableParkingSpotID;
+            }
+        }
+
         public static void FillOccupancy(string personName, string spaceshipName, int parkingSpotID)
         {
             var occupancy = new Occupancy
             {
-                // if the person is in the database, then it will give me the personÌD, otherwise it will create an ID
+                // If the person is in the database, then it will give me the personID, otherwise it will create a person and return their ID
                 PersonID = AddPerson(personName),
                 SpaceshipID = AddSpaceship(spaceshipName),
                 ParkingSpotID = parkingSpotID,

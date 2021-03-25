@@ -1,12 +1,8 @@
-﻿using SpaceParkModel;
-using SpaceParkModel.Data;
+﻿using SpaceParkModel.SwApi;
 using SpaceParkModel.Database;
-using SpaceParkModel.SwApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SpaceParkConsole
 {
@@ -44,7 +40,7 @@ namespace SpaceParkConsole
                 if (key != null)
                 {
                     Console.CursorLeft = 0;
-                    Console.CursorTop = Console.CursorTop - options.Length;
+                    Console.CursorTop -= options.Length;
                 }
 
                 // Print all the options, highlighting the selected one.
@@ -98,7 +94,6 @@ namespace SpaceParkConsole
             else if (isCheckedIn && selection == 0)
             {
                 ShowPayAndLeave();
-                LogOut();
             }
             else if (!isCheckedIn && selection == 0)
             {
@@ -160,24 +155,15 @@ namespace SpaceParkConsole
             int selection = Show("Please select your spaceship.", starshipOptions);
             SwStarship starship = starships[selection];
 
-            double starshipLength = starship.Length;
+            int availableParkingSpotID = DBQuery.GetAvailableParkingSpotID(starship);
 
-            // get all parking spot sizes
-            List<ParkingSize> parkingSizes = DBQuery.GetParkingSizes();
-
-            // find appropriate parking spot size (smallest size the ship will fit in)
-            ParkingSize appropriateParkingSize = parkingSizes.Where(p => p.Size > starshipLength).OrderBy(p => p.Size).First();
-
-            // check if there is a free spot for that size in the database and get the id
-            int availableParkingSpotID = DBQuery.GetAvailableParking(appropriateParkingSize.ID);
-
-            // TODO: test this at some point...
-            // create occupancy for person/starship
             if (availableParkingSpotID == 0)
             {
-                Console.WriteLine("Sorry... No parking spot available");
+                Console.Clear();
+                Console.WriteLine("Sorry... No parking spot for your ship size available.");
+                Console.WriteLine("\nPress any key to continue...");
                 Console.ReadKey();
-                Environment.Exit(0);
+                return;
             }
             DBQuery.FillOccupancy(ActivePerson, starship.Name, availableParkingSpotID);
         }

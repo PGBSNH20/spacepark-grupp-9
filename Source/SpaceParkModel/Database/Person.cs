@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SpaceParkModel.Data
+namespace SpaceParkModel.Database
 {
     public class Person
     {

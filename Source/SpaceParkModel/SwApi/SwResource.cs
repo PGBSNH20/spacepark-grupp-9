@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SpaceParkModel
+namespace SpaceParkModel.SwApi
 {
     public class SwResource<T>
     {
