@@ -82,7 +82,7 @@ namespace SpaceParkModel.Database
             return await GetSpaceshipID(name);
         }
 
-        private static async Task<int> GetSpaceshipID(string name)
+        public static async Task<int> GetSpaceshipID(string name)
         {
             await using var context = new SpaceParkContext();
             var spaceship = await context.Spaceships.FirstOrDefaultAsync(s => s.Name == name);
@@ -142,7 +142,7 @@ namespace SpaceParkModel.Database
             await UpdateOccupancy(occupancy);
         }
 
-        private static async Task<decimal> CalculatePaymentAmount(Occupancy occupancy)
+        public static async Task<decimal> CalculatePaymentAmount(Occupancy occupancy)
         {
             int parkingSizeID = await GetParkingSizeIDBySpot(occupancy.ParkingSpotID);
             decimal parkingSpotPrice = await GetParkingSpotPriceByID(parkingSizeID);
