@@ -3,10 +3,12 @@ using SpaceParkModel.Database;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace SpaceParkConsole
 {
-    class Menu
+    public class Menu
     {
         private readonly SwApi swApi;
         public string ActivePerson { get; set; }
@@ -73,13 +75,11 @@ namespace SpaceParkConsole
             return selected;
         }
 
-        public void MainMenu()
+        public async Task MainMenu()
         {
             Console.Clear();
-            // TODO: changed quit to logout if logged in.
-            // TODO: if you are in the spaceship options -> add a Quit option
             string[] options = { "Park", "Show History", "Log out", "Quit" };
-            bool isCheckedIn = DBQuery.IsCheckedIn(ActivePerson);
+            bool isCheckedIn = await DBQuery.IsCheckedIn(ActivePerson);
             if (isCheckedIn)
             {
                 options = new string[] { "Pay and leave", "Show History", "Log out", "Quit" };
@@ -93,29 +93,29 @@ namespace SpaceParkConsole
             }
             else if (isCheckedIn && selection == 0)
             {
-                ShowPayAndLeave();
+                await ShowPayAndLeave();
             }
             else if (!isCheckedIn && selection == 0)
             {
-                ShowParkingMenu();
+                await ShowParkingMenu();
             }
             else if (selection == 1)
             {
-                ShowPersonalHistory(ActivePerson);
+                await ShowPersonalHistory(ActivePerson);
             }
             else if (selection == options.Length - 2)
             {
-                LogOut();
+                await LogOut();
             }
-            MainMenu();
+            await MainMenu();
         }
 
-        public bool ShowNamePrompt()
+        public async Task<bool> ShowNamePrompt()
         {
             Console.Clear();
             Console.WriteLine("Please enter your name: ");
             string nameAnswer = Console.ReadLine();
-            bool isSwChar = swApi.ValidateSwName(nameAnswer);
+            bool isSwChar = await swApi.ValidateSwName(nameAnswer);
             if (isSwChar)
             {
                 ActivePerson = nameAnswer;
@@ -131,17 +131,17 @@ namespace SpaceParkConsole
             }
             else if (selection == 0)
             {
-                return ShowNamePrompt();
+                return await ShowNamePrompt();
             }
 
             return false;
         }
 
-        private void ShowParkingMenu()
+        private async Task ShowParkingMenu()
         {
             Console.Clear();
             List<SwStarship> starships = swApi.GetAllResources<SwStarship>(SwApiResource.starships).Result;
-            List<SwStarship> personalStarships = swApi.GetPersonStarships(ActivePerson);
+            List<SwStarship> personalStarships = await swApi.GetPersonStarships(ActivePerson);
             
             foreach (var ship in personalStarships)
             {
@@ -155,7 +155,7 @@ namespace SpaceParkConsole
             int selection = Show("Please select your spaceship.", starshipOptions);
             SwStarship starship = starships[selection];
 
-            int availableParkingSpotID = DBQuery.GetAvailableParkingSpotID(starship);
+            int availableParkingSpotID = await DBQuery.GetAvailableParkingSpotID(starship);
 
             if (availableParkingSpotID == 0)
             {
@@ -165,86 +165,89 @@ namespace SpaceParkConsole
                 Console.ReadKey();
                 return;
             }
-            DBQuery.FillOccupancy(ActivePerson, starship.Name, availableParkingSpotID);
+            await DBQuery.FillOccupancy(ActivePerson, starship.Name, availableParkingSpotID);
         }
 
-        private void ShowPayAndLeave()
+        private async Task ShowPayAndLeave()
         {
             Console.Clear();
-            Occupancy occupancy = DBQuery.GetOpenOccupancyByName(ActivePerson);
-            int parkingSpotID = occupancy.ParkingSpotID;
-            int parkingSizeID = DBQuery.GetParkingSizeIDBySpot(parkingSpotID);
-            decimal parkingSpotPrice = DBQuery.GetParkingSpotPriceByID(parkingSizeID);
+            Occupancy occupancy = await DBQuery.GetOpenOccupancyByName(ActivePerson);
 
-            TimeSpan parkingDuration = DateTime.Now - occupancy.ArrivalTime;
-            decimal billingHours = Convert.ToDecimal(Math.Ceiling(parkingDuration.TotalHours));
+            await DBQuery.AddPaymentAndDeparture(occupancy);
 
-            decimal totalPrice = billingHours * parkingSpotPrice;
-
-            occupancy.DepartureTime = DateTime.Now;
-            DBQuery.UpdateOccupancy(occupancy);
-
-            ShowInvoiceAndLogout(totalPrice, billingHours);
+            await ShowInvoiceAndLogout(occupancy);
         }
 
-        private void ShowInvoiceAndLogout(decimal totalPrice, decimal billingHours)
+        private async Task ShowInvoiceAndLogout(Occupancy occupancy)
         {
             Console.Clear();
+
+            decimal billingHours = DBQuery.CalculateBillingHours(occupancy);
+
+            await using var context = new SpaceParkContext();
+            Payment payment = await context.Payments.FirstAsync(p => p.OccupancyID == occupancy.ID);
+            decimal totalPrice = payment.Amount;
+
             Console.WriteLine($"Thank you for choosing us {ActivePerson}. You paid {totalPrice} for {billingHours} hours.");
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
-            LogOut();
+            await LogOut();
         }
 
-        private void ShowPersonalHistory(string name)
+        private async Task ShowPersonalHistory(string name)
         {
             Console.Clear();
-            List<OccupancyHistory> history = DBQuery.GetPersonalHistory(name);
+            List<OccupancyHistory> history = await DBQuery.GetPersonalHistory(name);
 
-            Console.WriteLine("Spaceship                           Date          Duration (in hours)");
-            Console.WriteLine("---------------------------------------------------------------------");
+            Console.WriteLine("Spaceship                           Date          Duration (in hours)   Amount Paid");
+            Console.WriteLine("-----------------------------------------------------------------------------------");
 
             foreach(var data in history)
             {
-                string spaceshipName = ResizeTextToLength(data.SpaceshipName, 32);
+                string spaceshipName = PadText(data.SpaceshipName, 32);
 
                 string date = data.ArrivalTime.ToString("yyyy-MM-dd");
-                date = ResizeTextToLength(date, 10);
+                date = PadText(date, 10);
 
                 double duration = (data.DepartureTime - data.ArrivalTime).TotalHours;
                 duration = Math.Round(duration, 1, MidpointRounding.ToPositiveInfinity);
                 string durationText = duration.ToString();
-                durationText = ResizeTextToLength(durationText, 4);
+                durationText = PadText(durationText, 18);
 
-                Console.WriteLine($"{spaceshipName}    {date}    {durationText}");
+                string amountPaid = PadDecimal(data.AmountPaid, 11);
+
+                Console.WriteLine($"{spaceshipName}    {date}    {durationText}    {amountPaid}");
             }
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
         }
 
-        private static string ResizeTextToLength(string text, int length)
+        public static string PadText(string text, int length)
         {
             string result = "";
-            if (text.Length == length)
-            {
-                result = text;
-            }
-            else if (text.Length > length)
+            if (text.Length > length)
             {
                 result = text.Substring(0, length - 3) + "...";
             }
-            else if (text.Length < length)
+            else
             {
                 result = text.PadRight(length);
             }
             return result;
         }
 
-        private void LogOut()
+        public static string PadDecimal(decimal number, int length)
+        {
+            string text = number.ToString();
+
+            return text.PadLeft(length);
+        }
+
+        private async Task LogOut()
         {
             ActivePerson = "";
             Console.Clear();
-            ShowNamePrompt();
+            await ShowNamePrompt();
         }
     }
 }

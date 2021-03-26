@@ -7,7 +7,7 @@ namespace SpaceParkModel.SwApi
 {
     public class SwApi
     {
-        RestClient client;
+        private readonly RestClient client;
 
         public SwApi()
         {
@@ -17,14 +17,14 @@ namespace SpaceParkModel.SwApi
         public async Task<List<T>> GetAllResources<T>(SwApiResource resource)
         {
             SwResource<T> response = await GetResourcePage<T>(resource);
-            List<T> datas = response.Results;
+            List<T> data = response.Results;
             // once it goes into the while loop, it uses the GetResourcePage(string) method 
             while (response.Next != null)
             {
                 response = await GetResourcePage<T>(response.Next);
-                datas.AddRange(response.Results);
+                data.AddRange(response.Results);
             }
-            return datas;
+            return data;
         }
 
         private async Task<SwResource<T>> GetResourcePage<T>(SwApiResource resource)
@@ -50,33 +50,34 @@ namespace SpaceParkModel.SwApi
         {
             var request = new RestRequest($"{resource}/?search={searchTerm}", DataFormat.Json);
             var response = await client.GetAsync<SwResource<T>>(request);
-            List<T> datas = response.Results;
-            return datas;
+            List<T> data = response.Results;
+            return data;
         }
 
-        public bool ValidateSwName(string name)
+        public async Task<bool> ValidateSwName(string name)
         {
             string trimmedName = name.Trim().ToLower();
-            List<SwPeople> people = SearchResource<SwPeople>(SwApiResource.people, trimmedName).Result;
+            List<SwPeople> people = await SearchResource<SwPeople>(SwApiResource.people, trimmedName);
             if (people.Count != 1)
             {
                 return false;
             }
             string personName = people[0].Name.ToLower();
 
-            return trimmedName.Equals(personName);
+            return trimmedName == personName;
         }
 
-        public List<SwStarship> GetPersonStarships(string name)
+        public async Task<List<SwStarship>> GetPersonStarships(string name)
         {
-            List<SwStarship> starships = new();
-            SwPeople person = SearchResource<SwPeople>(SwApiResource.people, name).Result.First();
+            List<SwPeople> people = await SearchResource<SwPeople>(SwApiResource.people, name);
+            SwPeople person = people.First();
             
+            List<SwStarship> starships = new();
             if (person.Starships.Count > 0)
             {
                 foreach (var starship in person.Starships)
                 {
-                    starships.Add(GetResource<SwStarship>(starship).Result);
+                    starships.Add(await GetResource<SwStarship>(starship));
                 }
             }
 

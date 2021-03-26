@@ -11,6 +11,7 @@ namespace SpaceParkModel.Database
         public DbSet<Spaceship> Spaceships { get; set; }
         public DbSet<ParkingSize> ParkingSizes { get; set; }
         public DbSet<ParkingSpots> ParkingSpots { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -18,6 +19,8 @@ namespace SpaceParkModel.Database
             //testing: optionsBuilder.UseSqlServer(@"Data Source=DESKTOP-AFKC3I2\SQLEXPRESS;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Initial Catalog=SpaceParkTesting");
             optionsBuilder.UseSqlServer(@"Data Source=DESKTOP-AFKC3I2\SQLEXPRESS;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;Initial Catalog=SpaceParkTesting");
         }
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +74,21 @@ namespace SpaceParkModel.Database
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 15, PersonID = 3, SpaceshipID = 2, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 4 });
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 16, PersonID = 4, SpaceshipID = 3, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 5 });
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 17, PersonID = 5, SpaceshipID = 5, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 6 });
+            #endregion
+
+            #region Payment
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 1, OccupancyID = 1, Amount = 600.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 2, OccupancyID = 2, Amount = 100.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 3, OccupancyID = 3, Amount = 400.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 4, OccupancyID = 4, Amount = 10000.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 5, OccupancyID = 5, Amount = 850.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 6, OccupancyID = 6, Amount = 80.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 7, OccupancyID = 7, Amount = 1200.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 8, OccupancyID = 8, Amount = 250.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 9, OccupancyID = 9, Amount = 400.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 10, OccupancyID = 11, Amount = 700.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 11, OccupancyID = 12, Amount = 350.00M });
+            modelBuilder.Entity<Payment>().HasData(new Payment { ID = 12, OccupancyID = 13, Amount = 300.00M });
             #endregion
         }
     }

@@ -8,5 +8,6 @@ namespace SpaceParkModel.Database
         public string SpaceshipName { get; set; }
         public DateTime ArrivalTime { get; set; }
         public DateTime DepartureTime { get; set; }
+        public decimal AmountPaid { get; set; }
     }
 }
