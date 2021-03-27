@@ -160,10 +160,22 @@ namespace SpaceParkConsole
             if (availableParkingSpotID == 0)
             {
                 Console.Clear();
-                Console.WriteLine("Sorry... No parking spot for your ship size available.");
-                Console.WriteLine("\nPress any key to continue...");
-                Console.ReadKey();
-                return;
+                availableParkingSpotID = await DBQuery.GetNextSmallestAvailableParkingSpotID(starship);
+                if (availableParkingSpotID == 0)
+                {
+                    Console.WriteLine("Sorry... No parking spot for your ship size available.");
+                    Console.WriteLine("\nPress any key to continue...");
+                    Console.ReadKey();
+                    return;
+                }
+                string menuPrompt = "Looks like there are no appropriate parking spots available, but there is a larger one available (more expensive), would you like to take that instead?";
+                string[] yesNoOptions = { "Yes", "No" };
+                int selectionForParkingSpot = Show(menuPrompt, yesNoOptions);
+                if (selectionForParkingSpot == 1)
+                {
+                    return;
+                }
+
             }
             await DBQuery.FillOccupancy(ActivePerson, starship.Name, availableParkingSpotID);
         }
@@ -184,9 +196,7 @@ namespace SpaceParkConsole
 
             decimal billingHours = DBQuery.CalculateBillingHours(occupancy);
 
-            await using var context = new SpaceParkContext();
-            Payment payment = await context.Payments.FirstAsync(p => p.OccupancyID == occupancy.ID);
-            decimal totalPrice = payment.Amount;
+            decimal totalPrice = await DBQuery.GetPaymentForOccupancy(occupancy);
 
             Console.WriteLine($"Thank you for choosing us {ActivePerson}. You paid {totalPrice} for {billingHours} hours.");
             Console.WriteLine("Press any key to continue...");

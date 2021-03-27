@@ -106,19 +106,23 @@ namespace SpaceParkTest
             Assert.Equal(spaceshipID, occupancyAfterParking.SpaceshipID);
 
             // unpark
-            //await DBQuery.AddPaymentAndDeparture(occupancyAfterParking);
+            await DBQuery.AddPaymentAndDeparture(occupancyAfterParking);
 
-            //Occupancy occupancyAfterLeaving = await DBQuery.GetOpenOccupancyByName(personName);
-            //Assert.NotNull(occupancyAfterLeaving.DepartureTime);
+            int occupancyID = occupancyAfterParking.ID;
 
-            //List<OccupancyHistory> occupancyHistory = await DBQuery.GetPersonalHistory(personName);
-            //Assert.Equal(occupancyAfterParking.ArrivalTime, occupancyHistory[^1].ArrivalTime);
-            //Assert.Equal(occupancyAfterParking.DepartureTime, occupancyHistory[^1].DepartureTime);
-            //Assert.Equal(personName, occupancyHistory[^1].PersonName);
-            //Assert.Equal(testSwStarship.Name, occupancyHistory[^1].SpaceshipName);
+            await using var context = new SpaceParkContext();
+            Occupancy occupancyAfterLeaving = await context.Occupancies.FindAsync(occupancyID);
 
-            //decimal paymentAmount = await DBQuery.CalculatePaymentAmount(occupancyAfterLeaving);
-            //Assert.Equal(paymentAmount, occupancyHistory[^1].AmountPaid);
+            Assert.NotNull(occupancyAfterLeaving.DepartureTime);
+
+            List<OccupancyHistory> occupancyHistory = await DBQuery.GetPersonalHistory(personName);
+            Assert.Equal(occupancyAfterParking.ArrivalTime, occupancyHistory[^1].ArrivalTime);
+            Assert.Equal(occupancyAfterParking.DepartureTime, occupancyHistory[^1].DepartureTime);
+            Assert.Equal(personName, occupancyHistory[^1].PersonName);
+            Assert.Equal(testSwStarship.Name, occupancyHistory[^1].SpaceshipName);
+
+            decimal paymentAmount = await DBQuery.CalculatePaymentAmount(occupancyAfterLeaving);
+            Assert.Equal(paymentAmount, occupancyHistory[^1].AmountPaid);
         }
     }
 }

@@ -43,8 +43,32 @@ namespace SpaceParkModel.Database
             return availableParkingSpotID;
         }
 
+        public static async Task<int> GetNextSmallestAvailableParkingSpotID(SwStarship ship)
+        {
+            double starshipLength = ship.Length;
+
+            await using SpaceParkContext context = new SpaceParkContext();
+            ParkingSize[] appropriateParkingSizes = await context.ParkingSizes.Where(p => p.Size > starshipLength).OrderBy(p => p.Size).ToArrayAsync();
+
+            foreach (var parkingSize in appropriateParkingSizes)
+            {
+                int availableParkingSpotID = await GetAvailableParkingSpotID(parkingSize.ID);
+                if (availableParkingSpotID != 0)
+                {
+                    return availableParkingSpotID;
+                }
+            }
+
+            return 0;
+        }
+
         public static async Task FillOccupancy(string personName, string spaceshipName, int parkingSpotID)
         {
+            if (parkingSpotID == 0)
+            {
+                throw new Exception("You can't park in spot 0, because it doesn't exist.");
+            }
+
             var occupancy = new Occupancy
             {
                 // If the person is in the database, then it will give me the personID, otherwise it will create a person and return their ID
@@ -158,6 +182,14 @@ namespace SpaceParkModel.Database
             decimal billingHours = Convert.ToDecimal(Math.Ceiling(parkingDuration.TotalHours));
 
             return billingHours;
+        }
+
+        public static async Task<decimal> GetPaymentForOccupancy(Occupancy occupancy)
+        {
+            await using var context = new SpaceParkContext();
+            Payment payment = await context.Payments.FirstAsync(p => p.OccupancyID == occupancy.ID);
+
+            return payment.Amount;
         }
 
         public static async Task UpdateOccupancy(Occupancy occupancy)

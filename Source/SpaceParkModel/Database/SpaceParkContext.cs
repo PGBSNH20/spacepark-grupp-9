@@ -73,7 +73,7 @@ namespace SpaceParkModel.Database
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 14, PersonID = 1, SpaceshipID = 1, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 3 });
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 15, PersonID = 3, SpaceshipID = 2, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 4 });
             modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 16, PersonID = 4, SpaceshipID = 3, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 5 });
-            modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 17, PersonID = 5, SpaceshipID = 5, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 6 });
+            //modelBuilder.Entity<Occupancy>().HasData(new Occupancy { ID = 17, PersonID = 5, SpaceshipID = 5, ArrivalTime = DateTime.Parse("2021-03-24 12:22:06.0277378", CultureInfo.InvariantCulture), DepartureTime = null,                                                                        ParkingSpotID = 6 });
             #endregion
 
             #region Payment
