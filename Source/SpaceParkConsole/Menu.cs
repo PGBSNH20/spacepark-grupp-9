@@ -150,7 +150,7 @@ namespace SpaceParkConsole
                 starships.Insert(0, ship);
             }
 
-            // Getting the Names for the menu
+            // Getting the Names of the ships for the menu
             string[] starshipOptions = starships.Select(starship => starship.Name).ToArray();
             int selection = Show("Please select your spaceship.", starshipOptions);
             SwStarship starship = starships[selection];
@@ -177,6 +177,7 @@ namespace SpaceParkConsole
                 }
 
             }
+
             await DBQuery.FillOccupancy(ActivePerson, starship.Name, availableParkingSpotID);
         }
 
@@ -234,7 +235,7 @@ namespace SpaceParkConsole
 
         public static string PadText(string text, int length)
         {
-            string result = "";
+            string result;
             if (text.Length > length)
             {
                 result = text.Substring(0, length - 3) + "...";

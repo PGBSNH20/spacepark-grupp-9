@@ -16,7 +16,7 @@ namespace SpaceParkModel.SwApi
 
         public async Task<List<T>> GetAllResources<T>(SwApiResource resource)
         {
-            SwResource<T> response = await GetResourcePage<T>(resource);
+            SwResource<T> response = await GetFirstResourcePage<T>(resource);
             List<T> data = response.Results;
             // once it goes into the while loop, it uses the GetResourcePage(string) method 
             while (response.Next != null)
@@ -27,13 +27,14 @@ namespace SpaceParkModel.SwApi
             return data;
         }
 
-        private async Task<SwResource<T>> GetResourcePage<T>(SwApiResource resource)
+        private async Task<SwResource<T>> GetFirstResourcePage<T>(SwApiResource resource)
         {
             string resourceString = resource.ToString();
             var request = new RestRequest($"{resourceString}/", DataFormat.Json);
             return await client.GetAsync<SwResource<T>>(request);
         }
 
+        // Used for URLs.
         private async Task<SwResource<T>> GetResourcePage<T>(string resource)
         {
             var request = new RestRequest(resource, DataFormat.Json);

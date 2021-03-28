@@ -83,7 +83,7 @@ namespace SpaceParkTest
         [Fact]
         public async Task Scenario_User_LogsIn_Parks_Unparks()
         {
-            // park => check occupancy for the new entry, check if person is in the person database, check if starship, etc. are correct
+
             SwStarship testSwStarship = new()
             {
                 Name = "Test Spaceship",

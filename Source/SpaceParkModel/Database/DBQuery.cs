@@ -20,11 +20,11 @@ namespace SpaceParkModel.Database
         public static async Task<int> GetAvailableParkingSpotID(int sizeID)
         {
             await using var context = new SpaceParkContext();
-            // we are filling an array with parkingSpot id's where the sizeID is equal to the parkingSizeID in the database table
+            // I am filling an array with parkingSpot id's where the sizeID is equal to the parkingSizeID in the database table
             int[] parkingSpots = await context.ParkingSpots.Where(p => p.ParkingSizeID == sizeID).Select(p => p.Spot).ToArrayAsync();
 
-            // we are looking for a departure which doesn't have a value and a parking spot that isnt occupied, and we take the first one.
-            // find: id that's unused by checking all entries without departure
+            // I am looking for a departure which doesn't have a value and a parking spot that isn't occupied, and we take the first one.
+            // find: ID that's un-used by checking all entries without departure
             int[] unavailableOccupancies = await context.Occupancies.Where(o => !o.DepartureTime.HasValue).Select(o => o.ParkingSpotID).ToArrayAsync();
 
             int firstAvailableSpot = parkingSpots.FirstOrDefault(p => !unavailableOccupancies.Contains(p));
@@ -102,7 +102,7 @@ namespace SpaceParkModel.Database
                 context.Add(new Spaceship { Name = name });
                 context.SaveChanges();
             }
-            // get spaceship id
+            // get spaceship ID
             return await GetSpaceshipID(name);
         }
 
@@ -125,7 +125,7 @@ namespace SpaceParkModel.Database
                 context.Add(new Person { Name = name });
                 context.SaveChanges();
             }
-            // get person id
+            // get person ID
             return await GetPersonID(name);
         }
 

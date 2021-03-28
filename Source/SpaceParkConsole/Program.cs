@@ -14,9 +14,6 @@ namespace SpaceParkConsole
             {
                 await menu.MainMenu();
             }
-            Environment.Exit(0);
-
-            // Todo: (should be waaaay later) make sure you can't park twice, right now we have the menu's doing it for us... but probably better to have a method 
         }
     }
 }
