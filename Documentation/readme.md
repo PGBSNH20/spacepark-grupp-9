@@ -12,3 +12,8 @@
 * Re-read the instructions and figured out I missed the application saving the payment onto the SQL, so the easiest solution without having to rework the entire project was to connect my occupancy table to one more and just stick the payment amount there, this way the price will be associated wot the date of their stay, rather than calculating it on the spot ( in the old way the if the costumer in 2 years wanted it it would only be able to calculate with the new prices.)
 * Changed my DBQueries to async, and basically had to go everywhere else where it would be affected.
 * Testing, this should have been done more on the spot will have to keep that in mind for next project.
+
+## 2021-03-27
+* Finished some testing, had a issue when unparking, so took me a while to figure out where the problem was, but ended up needing an exception in the code (issues when testing dbqeury alone without the menu, and it finding no parking available) 
+* Added to the program where if there is a bigger size available for parking it asks the user if they would like to park their ship in the bigger spot or not.
+* Re-read the code and moved code if it was in the wrong spot (so queries being in the menu, that should be in the DBQuery file, not in the menu)
