@@ -140,7 +140,7 @@ namespace SpaceParkConsole
         private async Task ShowParkingMenu()
         {
             Console.Clear();
-            List<SwStarship> starships = swApi.GetAllResources<SwStarship>(SwApiResource.starships).Result;
+            List<SwStarship> starships = await swApi.GetAllResources<SwStarship>(SwApiResource.starships);
             List<SwStarship> personalStarships = await swApi.GetPersonStarships(ActivePerson);
             
             foreach (var ship in personalStarships)
